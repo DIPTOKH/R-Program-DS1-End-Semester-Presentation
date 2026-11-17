@@ -1,0 +1,109 @@
+"sector_code","industry","section_group","section_name","industry_code"
+"Section A","Agriculture","Section A","Agriculture",NA
+"01","Crop and animal production, hunting and related service activities","Section A","Agriculture","01"
+"02","Forestry and logging","Section A","Agriculture","02"
+"03","Fishing and aquaculture","Section A","Agriculture","03"
+"Section B","Mining and Quarrying","Section B","Mining and Quarrying",NA
+"05","Mining of coal and lignite","Section B","Mining and Quarrying","05"
+"06","Extraction of crude petroleum and natural gas","Section B","Mining and Quarrying","06"
+"07","Mining of metal ores","Section B","Mining and Quarrying","07"
+"08","Other mining and quarrying","Section B","Mining and Quarrying","08"
+"09","Mining support service activities (G06Q 50/02 only (systems for mining*)","Section B","Mining and Quarrying","09"
+"","(used mining key words to assign to mining)","Section B","Mining and Quarrying",""
+"Section C","Manufacturing","Section C","Manufacturing",NA
+"10","Manufacture of food products","Section C","Manufacturing","10"
+"11","Manufacture of beverages","Section C","Manufacturing","11"
+"12","Manufacture of tobacco products","Section C","Manufacturing","12"
+"13","Manufacture of textiles","Section C","Manufacturing","13"
+"14","Manufacture of wearing apparel","Section C","Manufacturing","14"
+"15","Manufacture of leather and related products","Section C","Manufacturing","15"
+"16","Manufacture of wood and of products of wood and cork, except furniture; manufacture of articles of straw and plaiting materials","Section C","Manufacturing","16"
+"17","Manufacture of paper and paper products","Section C","Manufacturing","17"
+"18","Printing and reproduction of recorded media","Section C","Manufacturing","18"
+"19","Manufacture of coke and refined petroleum products","Section C","Manufacturing","19"
+"20","Manufacture of chemicals and chemical products","Section C","Manufacturing","20"
+"21","Manufacture of basic pharmaceutical products and pharmaceutical preparations","Section C","Manufacturing","21"
+"22","Manufacture of rubber and plastic products","Section C","Manufacturing","22"
+"23","Manufacture of other non-metallic mineral products","Section C","Manufacturing","23"
+"24","Manufacture of basic metals","Section C","Manufacturing","24"
+"25","Manufacture of fabricated metal products, except machinery and equipment","Section C","Manufacturing","25"
+"26","Manufacture of computer, electronic and optical products","Section C","Manufacturing","26"
+"27","Manufacture of electrical equipment","Section C","Manufacturing","27"
+"28","Manufacture of machinery and equipment n.e.c.","Section C","Manufacturing","28"
+"29","Manufacture of motor vehicles, trailers and semi-trailers","Section C","Manufacturing","29"
+"30","Manufacture of other transport equipment","Section C","Manufacturing","30"
+"31","Manufacture of furniture","Section C","Manufacturing","31"
+"32","Other manufacturing","Section C","Manufacturing","32"
+"33","Repair and installation of machinery and equipment","Section C","Manufacturing","33"
+"Section D","ELECTRICITY, GAS, STEAM AND AIR CONDITIONING SUPPLY","Section D","ELECTRICITY, GAS, STEAM AND AIR CONDITIONING SUPPLY",NA
+"35","Electricity, gas, steam and air conditioning supply","Section D","ELECTRICITY, GAS, STEAM AND AIR CONDITIONING SUPPLY","35"
+"Section E","WATER SUPPLY; SEWERAGE, WASTE MANAGEMENT AND REMEDIATION ACTIVITIES","Section E","WATER SUPPLY; SEWERAGE, WASTE MANAGEMENT AND REMEDIATION ACTIVITIES",NA
+"36 and 37","Water collection, treatment and supply and Sewerage","Section E","WATER SUPPLY; SEWERAGE, WASTE MANAGEMENT AND REMEDIATION ACTIVITIES","36 and 37"
+"38 and 39","Waste collection, treatment and disposal activities; materials recovery and Remediation activities and other waste management services","Section E","WATER SUPPLY; SEWERAGE, WASTE MANAGEMENT AND REMEDIATION ACTIVITIES","38 and 39"
+"Section F","CONSTRUCTION","Section F","CONSTRUCTION",NA
+"41","Construction of buildings","Section F","CONSTRUCTION","41"
+"42","Civil engineering","Section F","CONSTRUCTION","42"
+"43","Specialised construction activities","Section F","CONSTRUCTION","43"
+"Section G","WHOLESALE AND RETAIL TRADE; REPAIR OF MOTOR VEHICLES, MOTORCYCLES","Section G","WHOLESALE AND RETAIL TRADE; REPAIR OF MOTOR VEHICLES, MOTORCYCLES",NA
+"45","Wholesale and retail trade and repair of motor vehicles and motorcycles","Section G","WHOLESALE AND RETAIL TRADE; REPAIR OF MOTOR VEHICLES, MOTORCYCLES","45"
+"46","Wholesale trade, except of motor vehicles and motorcycles","Section G","WHOLESALE AND RETAIL TRADE; REPAIR OF MOTOR VEHICLES, MOTORCYCLES","46"
+"47","Retail trade, except of motor vehicles and motorcycles","Section G","WHOLESALE AND RETAIL TRADE; REPAIR OF MOTOR VEHICLES, MOTORCYCLES","47"
+"Section H","TRANSPORTATION AND STORAGE","Section H","TRANSPORTATION AND STORAGE",NA
+"49","Land transport and transport via pipelines","Section H","TRANSPORTATION AND STORAGE","49"
+"50","Water transport","Section H","TRANSPORTATION AND STORAGE","50"
+"51","Air transport","Section H","TRANSPORTATION AND STORAGE","51"
+"52","Warehousing and support activities for transportation","Section H","TRANSPORTATION AND STORAGE","52"
+"53","Postal and courier activities","Section H","TRANSPORTATION AND STORAGE","53"
+"Section I","ACCOMMODATION AND FOOD SERVICE ACTIVITIES","Section I","ACCOMMODATION AND FOOD SERVICE ACTIVITIES",NA
+"55","Accommodation","Section I","ACCOMMODATION AND FOOD SERVICE ACTIVITIES","55"
+"56","Food and beverage service activities","Section I","ACCOMMODATION AND FOOD SERVICE ACTIVITIES","56"
+"Section J","INFORMATION AND COMMUNICATION","Section J","INFORMATION AND COMMUNICATION",NA
+"58","Publishing activities","Section J","INFORMATION AND COMMUNICATION","58"
+"59","Motion picture, video and television programme production, sound recording and music publishing activities","Section J","INFORMATION AND COMMUNICATION","59"
+"60","Programming and broadcasting activities","Section J","INFORMATION AND COMMUNICATION","60"
+"61","Telecommunications","Section J","INFORMATION AND COMMUNICATION","61"
+"62","Computer programming, consultancy and related activities","Section J","INFORMATION AND COMMUNICATION","62"
+"63","Information service activities","Section J","INFORMATION AND COMMUNICATION","63"
+"Section K","FINANCIAL AND INSURANCE ACTIVITIES","Section K","FINANCIAL AND INSURANCE ACTIVITIES",NA
+"64","Financial service activities, except insurance and pension funding","Section K","FINANCIAL AND INSURANCE ACTIVITIES","64"
+"65","Insurance, reinsurance and pension funding, except compulsory Social security","Section K","FINANCIAL AND INSURANCE ACTIVITIES","65"
+"66","Activities auxiliary to financial services and insurance activities","Section K","FINANCIAL AND INSURANCE ACTIVITIES","66"
+"Section L","REAL ESTATE ACTIVITIES","Section L","REAL ESTATE ACTIVITIES",NA
+"68","Real estate activities","Section L","REAL ESTATE ACTIVITIES","68"
+"Section M","PROFESSIONAL, SCIENTIFIC AND TECHNICAL ACTIVITIES","Section M","PROFESSIONAL, SCIENTIFIC AND TECHNICAL ACTIVITIES",NA
+"69","Legal and accounting activities","Section M","PROFESSIONAL, SCIENTIFIC AND TECHNICAL ACTIVITIES","69"
+"70","Activities of head offices; management consultancy activities","Section M","PROFESSIONAL, SCIENTIFIC AND TECHNICAL ACTIVITIES","70"
+"71","Architectural and engineering activities; technical testing and analysis","Section M","PROFESSIONAL, SCIENTIFIC AND TECHNICAL ACTIVITIES","71"
+"72","Scientific research and development","Section M","PROFESSIONAL, SCIENTIFIC AND TECHNICAL ACTIVITIES","72"
+"73","Advertising and market research","Section M","PROFESSIONAL, SCIENTIFIC AND TECHNICAL ACTIVITIES","73"
+"74","Other professional, scientific and technical activities","Section M","PROFESSIONAL, SCIENTIFIC AND TECHNICAL ACTIVITIES","74"
+"75","Veterinary activities","Section M","PROFESSIONAL, SCIENTIFIC AND TECHNICAL ACTIVITIES","75"
+"Section N","ADMINISTRATIVE AND SUPPORT SERVICE ACTIVITIES","Section N","ADMINISTRATIVE AND SUPPORT SERVICE ACTIVITIES",NA
+"76","Rental and leasing activities","Section N","ADMINISTRATIVE AND SUPPORT SERVICE ACTIVITIES","76"
+"77","Employment activities","Section N","ADMINISTRATIVE AND SUPPORT SERVICE ACTIVITIES","77"
+"78","Travel agency, tour operator and other reservation service and related activities","Section N","ADMINISTRATIVE AND SUPPORT SERVICE ACTIVITIES","78"
+"79","Security and investigation activities","Section N","ADMINISTRATIVE AND SUPPORT SERVICE ACTIVITIES","79"
+"80","Services to buildings and landscape activities","Section N","ADMINISTRATIVE AND SUPPORT SERVICE ACTIVITIES","80"
+"81","Office administrative, office support and other business support activities","Section N","ADMINISTRATIVE AND SUPPORT SERVICE ACTIVITIES","81"
+"Section O","PUBLIC ADMINISTRATION AND DEFENCE; COMPULSORY SOCIAL SECURITY","Section O","PUBLIC ADMINISTRATION AND DEFENCE; COMPULSORY SOCIAL SECURITY",NA
+"84","Public administration and defence; compulsory social security","Section O","PUBLIC ADMINISTRATION AND DEFENCE; COMPULSORY SOCIAL SECURITY","84"
+"Section P","EDUCATION","Section P","EDUCATION",NA
+"85","Education","Section P","EDUCATION","85"
+"Section Q","HUMAN HEALTH AND SOCIAL WORK ACTIVITIES","Section Q","HUMAN HEALTH AND SOCIAL WORK ACTIVITIES",NA
+"86","Human health activities","Section Q","HUMAN HEALTH AND SOCIAL WORK ACTIVITIES","86"
+"87","Residential care activities","Section Q","HUMAN HEALTH AND SOCIAL WORK ACTIVITIES","87"
+"88","Social work activities without accommodation","Section Q","HUMAN HEALTH AND SOCIAL WORK ACTIVITIES","88"
+"Section R","ARTS, ENTERTAINMENT AND RECREATION","Section R","ARTS, ENTERTAINMENT AND RECREATION",NA
+"90","Creative, arts and entertainment activities","Section R","ARTS, ENTERTAINMENT AND RECREATION","90"
+"91","Libraries, archives, museums and other cultural activities","Section R","ARTS, ENTERTAINMENT AND RECREATION","91"
+"92","Gambling and betting activities","Section R","ARTS, ENTERTAINMENT AND RECREATION","92"
+"93","Sports activities and amusement and recreation activities","Section R","ARTS, ENTERTAINMENT AND RECREATION","93"
+"Section S","OTHER SERVICE ACTIVITIES","Section S","OTHER SERVICE ACTIVITIES",NA
+"94","Activities of membership organisations","Section S","OTHER SERVICE ACTIVITIES","94"
+"95","Repair of computers and personal and household goods","Section S","OTHER SERVICE ACTIVITIES","95"
+"96","Other personal service activities","Section S","OTHER SERVICE ACTIVITIES","96"
+"Section T","ACTIVITIES OF HOUSEHOLDS AS EMPLOYERS; UNDIFFERENTIATED GOODS-AND SERVICES-PRODUCING ACTIVITIES OF HOUSEHOLDS FOR OWN USE","Section T","ACTIVITIES OF HOUSEHOLDS AS EMPLOYERS; UNDIFFERENTIATED GOODS-AND SERVICES-PRODUCING ACTIVITIES OF HOUSEHOLDS FOR OWN USE",NA
+"97","Activities of households as employers of domestic personnel","Section T","ACTIVITIES OF HOUSEHOLDS AS EMPLOYERS; UNDIFFERENTIATED GOODS-AND SERVICES-PRODUCING ACTIVITIES OF HOUSEHOLDS FOR OWN USE","97"
+"98","Undifferentiated goods/services-producing activities of private households for own use","Section T","ACTIVITIES OF HOUSEHOLDS AS EMPLOYERS; UNDIFFERENTIATED GOODS-AND SERVICES-PRODUCING ACTIVITIES OF HOUSEHOLDS FOR OWN USE","98"
+"Section U","ACTIVITIES OF EXTRATERRITORIAL ORGANISATIONS AND BODIES","Section U","ACTIVITIES OF EXTRATERRITORIAL ORGANISATIONS AND BODIES",NA
+"99","Activities of extraterritorial organisations and bodies","Section U","ACTIVITIES OF EXTRATERRITORIAL ORGANISATIONS AND BODIES","99"

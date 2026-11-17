@@ -1,0 +1,603 @@
+---
+title: "AI Skills and the UK Labour Market"
+author: |
+  Dipto Kumar Haldar(261130016)
+  Krishna Gupta (261130023)
+  Mahir Sahu (261130024)
+  Sumit Kumar (261130056)
+  Ritwik Narayana (261130030)
+subtitle: Project Report
+output:
+  word_document:
+    toc: true
+    toc_depth: '3'
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+    code_folding: none
+    df_print: paged
+    highlight: tango
+    fig_caption: true
+  pdf_document:
+    toc: true
+    toc_depth: '3'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE,
+                      fig.width=10, fig.height=5.7, fig.align="center",
+                      out.width="95%", comment=NA)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(knitr)
+library(stringr)
+if (requireNamespace("kableExtra", quietly=TRUE)) {
+  # kableExtra is optional; this report works without it.
+}
+needed <- c("table_8.1.csv", "table_8.2.csv", "table_8.3.csv",
+            "table_8.4.csv", "table_8.5.csv", "table_8.6_long.csv")
+missing_files <- needed[!file.exists(needed)]
+if (length(missing_files)) stop("Missing CSV file(s): ",paste(missing_files,collapse=", "),
+  ". Keep the CSV files in the same folder as this Rmd.")
+t81 <- read.csv("table_8.1.csv", check.names=FALSE)
+t82 <- read.csv("table_8.2.csv", check.names=FALSE)
+t83 <- read.csv("table_8.3.csv", check.names=FALSE)
+t84 <- read.csv("table_8.4.csv", check.names=FALSE)
+t85 <- read.csv("table_8.5.csv", check.names=FALSE)
+t86wide <- read.csv("table_8.6_long.csv", check.names=FALSE)
+names(t83)[1] <- "occupation"
+for (nm in names(t81)[-1]) t81[[nm]] <- as.numeric(t81[[nm]])
+for (nm in names(t82)[-1]) t82[[nm]] <- as.numeric(t82[[nm]])
+for (nm in names(t83)[-1]) t83[[nm]] <- as.numeric(t83[[nm]])
+t84$net_change <- as.numeric(t84$net_change)
+t85$industry_code <- as.character(t85$industry_code)
+# The supplied "long" patent file is actually wide, with Y2013 ... Y2023 columns.
+t86 <- t86wide |>
+  pivot_longer(cols=matches("^Y[0-9]{4}$"),
+               names_to="Year", values_to="Penetration") |>
+  mutate(Year=as.integer(sub("^Y", "", Year)),
+         Penetration=as.numeric(Penetration))
+scenarios <- c("BS","AS","TS","HC")
+scenario_labels <- c(BS="Baseline", AS="Automation", TS="Technological Opportunities", HC="Human-Centric")
+years <- c(2024,2030,2035)
+row_total <- function(x) { z <- x[trimws(x$occupation)=="Total",,drop=FALSE]; if(nrow(z)!=1)stop("Expected one Total row"); z }
+total81 <- row_total(t81); total82 <- row_total(t82); total83 <- row_total(t83)
+occ83 <- t83[trimws(t83$occupation)!="Total",,drop=FALSE]
+occ83$name <- sub("^[0-9]{4}\\s*", "", occ83$occupation)
+occ83$share_2035 <- with(occ83,100*TS_adjusted_2035/TS_unadjusted_2035)
+occ83$net_change <- with(occ83, TS_adjusted_2035-TS_adjusted_2024)
+occ83 <- occ83[is.finite(occ83$share_2035)&is.finite(occ83$net_change),,drop=FALSE]
+shortname <- function(x,n=45) ifelse(nchar(x)>n,paste0(substr(x,1,n-3),"..."),x)
+report_theme <- theme_minimal(base_size=12) + theme(
+ plot.title=element_text(face="bold", size=15),
+ plot.subtitle=element_text(size=10.5,colour="grey35"),
+ axis.text.y=element_text(size=9), legend.position="bottom",
+ panel.grid.minor=element_blank())
+fmt <- function(x) format(round(x,1),big.mark=",",trim=TRUE,nsmall=1)
+```
+
+# Executive Summary
+
+This project examines **United Kingdom employment projections** from the government report *AI Skills for Life and Work: Labour Market and Skills Projections*. It turns six detailed tables into understandable employment comparisons and AI-related visualisations using **R, ggplot2 and Shiny**.
+
+**The central question:** How might technology, and particularly AI, affect the numbers of jobs and the activities workers perform by 2035?
+
+The project examines employment under alternative scenarios, recruitment needs, AI-involved employment, occupational change, industrial classifications, and AI patent penetration.
+
+> **How to read the data:** Employment figures are in **thousands of jobs** unless noted. The years 2030 and 2035 are **projections**, not observed future outcomes. The results apply to selected UK occupations rather than the whole world.
+
+# Data Source and Project Objectives
+
+The source is the [UK government AI Skills for Life and Work report](https://www.gov.uk/government/publications/ai-skills-for-life-and-work-labour-market-and-skills-projections/ai-skills-for-life-and-work-labour-market-and-skills-projections). The study draws on the **Working Futures** employment projections and considers additional information from AI-related job vacancies and patent activity.
+
+The project objectives are to:
+
+1. Compare occupational employment under four scenarios.
+2. Distinguish net job change from replacement demand.
+3. Identify occupations where AI-involved activities are expected to be common.
+4. Explore projected increases or decreases in jobs.
+5. Understand industry classifications and patent-based innovation indicators.
+6. Present the results in both an R Markdown report and an interactive Shiny dashboard.
+
+## Data inventory
+
+```{r data-inventory}
+data.frame(
+  Table=c("8.1","8.2","8.3","8.4","8.5","8.6"),
+  Subject=c("Employment by scenario", "Net change and replacement demand", "AI-involved employment",
+            "AI-adjusted employment changes", "Industrial classification", "AI patent penetration"),
+  Rows=c(nrow(t81),nrow(t82),nrow(t83),nrow(t84),nrow(t85),nrow(t86wide)),
+  Occupations=c(nrow(t81)-1,nrow(t82)-1,nrow(t83)-1,NA,NA,NA)
+) |> kable(caption="Datasets included in the report package")
+```
+
+# Table 8.1 — Employment under Four Scenarios
+
+## What the data represents
+
+Table 8.1 provides projected employment for 2024, 2030 and 2035 in selected occupations under four alternative scenarios. These scenarios are *possible futures*, not competing observations of what has already happened.
+
+| Code | Scenario | Simple meaning |
+|:---|:---|:---|
+| BS | Baseline | Reference scenario for comparison |
+| AS | Automation | A future featuring stronger automation effects |
+| TS | Technological Opportunities | Technology can change work, create opportunities and displace some jobs |
+| HC | Human-Centric | A future emphasising human-centred priorities |
+
+*Note:* The source CSV uses the code **HC** for Human-Centric. The code is preserved here to match the uploaded data.
+
+## Total employment by scenario
+
+```{r table81-data}
+d81 <- expand.grid(Year=years, Scenario=scenarios, stringsAsFactors=FALSE)
+d81$Employment <- mapply(function(s,y)as.numeric(total81[[paste0(s,"_",y)]][1]),
+                          d81$Scenario,d81$Year)
+d81$Scenario <- factor(d81$Scenario, levels=scenarios, labels=scenario_labels)
+summary81 <- d81 |> pivot_wider(names_from=Year,values_from=Employment)
+kable(summary81,caption="Projected total employment in selected occupations (thousands)",digits=0)
+```
+
+```{r chart81, fig.cap="Comparison of projected employment under four scenarios, 2024–2035."}
+ggplot(d81,aes(x=factor(Year),y=Employment,fill=Scenario))+
+  geom_col(position="dodge",width=0.78)+
+  scale_y_continuous(labels=scales::comma,expand=expansion(mult=c(0,.08)))+
+  labs(title="Employment projections under four scenarios",x="Year",y="Employment (thousands)",fill="Scenario")+
+  report_theme
+```
+
+## Example occupation across scenarios
+
+```{r chart81-example, fig.cap="Illustrative example based on the financial managers and directors row."}
+one81 <- t81[grepl("Financial managers and directors",t81$occupation,fixed=TRUE),,drop=FALSE][1,,drop=FALSE]
+ex81 <- expand.grid(Year=years,Scenario=scenarios,stringsAsFactors=FALSE)
+ex81$Employment <- mapply(function(s,y)as.numeric(one81[[paste0(s,"_",y)]][1]),ex81$Scenario,ex81$Year)
+ex81$Scenario <- factor(ex81$Scenario,levels=scenarios,labels=scenario_labels)
+ggplot(ex81,aes(x=Year,y=Employment,colour=Scenario,group=Scenario))+
+ geom_line(linewidth=1)+geom_point(size=2.6)+scale_x_continuous(breaks=years)+
+ labs(title="Financial managers and directors",subtitle="Occupation-level employment across scenarios",x="Year",y="Employment (thousands)")+
+ report_theme
+```
+
+**Interpretation and conclusion:** The same occupation can have different employment estimates under different assumptions about the future. Comparing scenarios helps reveal this uncertainty rather than treating one forecast as certain.
+
+# Table 8.2 — Net Change, Replacement Demand and Total Requirement
+
+## Three key ideas
+
+- **Net change:** The projected difference in the number of jobs between the start and end of the period. It can be positive or negative.
+- **Replacement demand:** Job openings that arise when existing workers retire or otherwise leave.
+- **Total requirement:** The combined need for workers from employment change and replacement demand.
+
+\[
+\text{Total requirement}=\text{Net change}+\text{Replacement demand}
+\]
+
+For example, if an occupation gains 200 jobs but also needs 500 replacement workers, total requirement is 700. If it loses 100 jobs but needs 500 replacement workers, total requirement is still 400.
+
+## Scenario comparison
+
+```{r table82-data}
+d82 <- data.frame(
+ Scenario=scenarios,
+ Net_change=sapply(scenarios,function(s)as.numeric(total82[[paste0(s,"_net_change")]][1])),
+ Replacement_demand=sapply(scenarios,function(s)as.numeric(total82[[paste0(s,"_replacement_demand")]][1]))
+)
+d82$Total_requirement <- d82$Net_change+d82$Replacement_demand
+d82$Scenario <- unname(scenario_labels[d82$Scenario])
+kable(d82,caption="Employment requirements under four scenarios (thousands)",digits=0)
+```
+
+```{r chart82, fig.cap="Employment change and replacement demand for each scenario."}
+plot82 <- d82 |>
+ select(Scenario,Net_change,Replacement_demand) |>
+ pivot_longer(-Scenario,names_to="Measure",values_to="Jobs")
+ggplot(plot82,aes(x=Scenario,y=Jobs,fill=Measure))+
+ geom_col(position="dodge",width=.75)+
+ scale_y_continuous(labels=scales::comma)+
+ labs(title="Net change versus replacement demand",x="Scenario",y="Jobs (thousands)",fill="Measure")+
+ report_theme + theme(axis.text.x=element_text(angle=15,hjust=1))
+```
+
+## Occupations with highest total requirement under TS
+
+```{r chart82-occupations, fig.cap="Top 10 occupations based on TS net change plus replacement demand."}
+occ82 <- t82[trimws(t82$occupation)!="Total",,drop=FALSE]
+occ82$name <- sub("^[0-9]{4}\\s*","",occ82$occupation)
+occ82$TS_total <- occ82$TS_net_change+occ82$TS_replacement_demand
+top82 <- head(occ82[order(-occ82$TS_total),,drop=FALSE],10)
+top82$label <- shortname(top82$name)
+ggplot(top82,aes(x=reorder(label,TS_total),y=TS_total))+
+ geom_col(fill="#3778AF")+coord_flip()+
+ labs(title="Largest total worker requirements: TS",x="Occupation",y="Total requirement (thousands)")+
+ report_theme
+```
+
+```{r table82-occupations}
+kable(data.frame(Occupation=top82$name,Net_change=top82$TS_net_change,
+ Replacement_demand=top82$TS_replacement_demand,Total_requirement=top82$TS_total),
+ caption="Top ten occupations in the TS scenario (thousands)")
+```
+
+**Interpretation and conclusion:** A job category can need many recruits even when its total workforce does not grow much. This is why replacement demand is essential when discussing future job opportunities.
+
+# Table 8.3 — Jobs Involving AI Activities
+
+## What adjusted and unadjusted mean
+
+Table 8.3 is based on the **Technological Opportunities Scenario (TS)** and distinguishes two related measures:
+
+- **Unadjusted employment** is the total projected employment in occupations selected as AI-related, even though some workers in those occupations may not perform AI activities.
+- **Adjusted employment** is an experimental estimate of the subset of jobs that involve AI activities. The research uses AI-related vacancy information and patent-based indicators of technological development to make this adjustment.
+
+**Important distinction:** Adjusted employment is *not* the number of jobs newly created by AI. The difference between adjusted and unadjusted employment is *not* the number of workers replaced by AI.
+
+## Two calculations used in our dashboard
+
+\[
+\text{AI share in 2035 (\%)}=100\times
+\frac{\text{Adjusted employment}_{2035}}{\text{Unadjusted employment}_{2035}}
+\]
+
+\[
+\text{Change in AI-involved jobs}=\text{Adjusted}_{2035}-\text{Adjusted}_{2024}
+\]
+
+## Graph 1 — Overall employment versus AI-involved employment
+
+```{r table83-overall}
+summary83 <- data.frame(
+  Year=years,
+  Unadjusted=sapply(years,function(y)as.numeric(total83[[paste0("TS_unadjusted_",y)]][1])),
+  Adjusted=sapply(years,function(y)as.numeric(total83[[paste0("TS_adjusted_",y)]][1]))
+)
+summary83$AI_share_percent <- round(100*summary83$Adjusted/summary83$Unadjusted,2)
+kable(summary83,caption="Total employment and AI-involved employment (thousands)",digits=2)
+```
+
+```{r chart83-overall, fig.cap="The adjusted estimate grows faster than the unadjusted estimate."}
+plot83_overall <- summary83 |>
+ pivot_longer(cols=c(Unadjusted,Adjusted),names_to="Type",values_to="Employment")
+ggplot(plot83_overall,aes(x=factor(Year),y=Employment,fill=Type))+
+ geom_col(position="dodge",width=.73)+
+ scale_y_continuous(labels=scales::comma)+
+ labs(title="Total versus AI-involved employment",x="Year",y="Employment (thousands)")+
+ report_theme
+```
+
+**What the graph shows:** Unadjusted employment rises gradually, whereas adjusted employment rises sharply. More jobs within selected occupations are expected to include AI-related activities.
+
+## Graph 2 — Top occupations by AI-involved employment, 2035
+
+```{r chart83-top, fig.cap="Top 10 occupational estimates of AI-involved jobs in 2035."}
+top83 <- head(occ83[order(-occ83$TS_adjusted_2035),,drop=FALSE],10)
+top83$label <- shortname(top83$name)
+ggplot(top83,aes(x=reorder(label,TS_adjusted_2035),y=TS_adjusted_2035))+
+ geom_col(fill="#2878B6")+coord_flip()+
+ labs(title="Top 10 occupations by AI-involved jobs",x="Occupation",y="Adjusted employment in 2035 (thousands)")+
+ report_theme
+```
+
+```{r table83-top}
+kable(data.frame(Occupation=top83$name, AI_involved_2035=top83$TS_adjusted_2035),
+ caption="Occupations with the largest AI-involved job counts (thousands)")
+```
+
+**What the graph shows:** Which occupations are expected to have the greatest **numbers** of AI-involved jobs. It does not measure the percentage of workers in those occupations.
+
+## Graph 3 — Occupations with highest AI employment share
+
+```{r chart83-share, fig.cap="Top 10 occupations ranked by their adjusted share of employment."}
+share83 <- head(occ83[order(-occ83$share_2035),,drop=FALSE],10)
+share83$label <- shortname(share83$name)
+ggplot(share83,aes(x=reorder(label,share_2035),y=share_2035))+
+ geom_col(fill="#24866D")+coord_flip()+
+ labs(title="Top 10 occupations by AI employment share",x="Occupation",y="Adjusted / unadjusted employment (%)")+
+ report_theme
+```
+
+```{r table83-share}
+kable(data.frame(Occupation=share83$name,AI_share_percent=round(share83$share_2035,1)),
+ caption="Occupations with the highest estimated AI-involved employment shares")
+```
+
+**What the graph shows:** The **proportion** of jobs expected to involve AI in each occupation. A smaller occupation can still have a very high AI share.
+
+## Graph 4 — Largest increases in AI-involved employment, 2024–2035
+
+```{r chart83-growth, fig.cap="Top ten projected increases in adjusted employment between 2024 and 2035."}
+growth83 <- head(occ83[order(-occ83$net_change),,drop=FALSE],10)
+growth83$label <- shortname(growth83$name)
+ggplot(growth83,aes(x=reorder(label,net_change),y=net_change))+
+ geom_col(fill="#D18B27")+coord_flip()+
+ labs(title="Largest increases in AI-involved employment",x="Occupation",y="Change, 2024 to 2035 (thousands)")+
+ report_theme
+```
+
+```{r table83-growth}
+kable(data.frame(Occupation=growth83$name,Change_2024_to_2035=growth83$net_change),
+ caption="Top 10 increases in AI-involved employment (thousands)")
+```
+
+**What the graph shows:** Where the **change** in AI-involved employment is largest, rather than where the 2035 level is simply highest. An increase may include changes in existing jobs; it is not necessarily entirely new jobs created by AI.
+
+## Graph 5 — Occupation size versus AI-involved jobs (scatter plot)
+
+```{r chart83-scatter, fig.cap="Each point is an occupation; dashed reference line y = x means 100% adjusted share."}
+scatter83 <- head(occ83[order(-occ83$TS_adjusted_2035),,drop=FALSE],20)
+ggplot(scatter83,aes(x=TS_unadjusted_2035,y=TS_adjusted_2035))+
+ geom_abline(slope=1,intercept=0,linetype="dashed",colour="grey50")+
+ geom_point(size=2.8,colour="#2878B6")+
+ coord_equal()+
+ labs(title="Occupation size vs AI-involved employment",subtitle="Top 20 occupations ranked by adjusted employment",x="Total employment in 2035 (thousands)",y="AI-involved employment in 2035 (thousands)")+
+ report_theme
+```
+
+**What the graph shows:** Each dot represents one occupation. The X-axis is total employment and the Y-axis is AI-involved employment. Points closer to the dashed **y = x** line have a higher adjusted share. The line is a **100% reference**, not a fitted regression. In the Shiny dashboard, users can drag a box around points to inspect them.
+
+## Graph 6 — Three-year trend for one selected occupation
+
+```{r chart83-one, fig.cap="Financial managers and directors illustrate increasing estimated AI involvement."}
+selected83 <- occ83[grepl("Financial managers and directors",occ83$name,fixed=TRUE),,drop=FALSE][1,,drop=FALSE]
+small83 <- data.frame(
+ Year=rep(years,2),
+ Type=rep(c("Total employment","AI-involved employment"),each=3),
+ Employment=as.numeric(unlist(selected83[1,c(paste0("TS_unadjusted_",years),
+                                         paste0("TS_adjusted_",years))],use.names=FALSE))
+)
+ggplot(small83,aes(x=factor(Year),y=Employment,fill=Type))+
+ geom_col(position="dodge",width=.73)+
+ labs(title="Financial managers and directors",subtitle="Total and adjusted employment, 2024–2035",x="Year",y="Employment (thousands)")+
+ report_theme
+```
+
+```{r table83-one}
+kable(small83,caption="Selected occupation: financial managers and directors (thousands)")
+```
+
+**What the graph shows:** How overall employment and AI-involved employment change in the **same occupation** over time. This shows why AI integration can rise substantially even without a similar increase in total occupational employment.
+
+## Summary and implications of Table 8.3
+
+The total row projects **`r fmt(summary83$Unadjusted[1])` thousand** unadjusted jobs in 2024 and **`r fmt(summary83$Unadjusted[3])` thousand** in 2035. Over that period, adjusted employment changes from **`r fmt(summary83$Adjusted[1])` thousand** to **`r fmt(summary83$Adjusted[3])` thousand**. In 2035, the adjusted share is approximately **`r round(summary83$AI_share_percent[3],1)`%** of employment in these *selected occupations*.
+
+These findings suggest that AI activities may become widespread in occupations that already exist. Students, employers and educators may need to think about **upskilling**, but the projections do not tell us exactly how many jobs AI will create or destroy.
+
+# Table 8.4 — Changes in AI-Involved Employment
+
+## About this dataset
+
+This table lists occupation-level **net changes in AI-adjusted employment**, together with SOC occupation codes. In the supplied dataset, all reported occupation values are **positive**: they are projected increases, not evidence that occupations with smaller increases are losing jobs. The numbers are in thousands.
+
+```{r data84-overview}
+occ84 <- t84 |> filter(trimws(occupation) != "Total", !is.na(net_change))
+summary84 <- data.frame(
+  Measure=c("Number of occupations", "Smallest increase (000s)",
+            "Largest increase (000s)", "Sum of occupation increases (000s)"),
+  Value=c(nrow(occ84), min(occ84$net_change),
+          max(occ84$net_change), sum(occ84$net_change))
+)
+kable(summary84, caption="Table 8.4 summary: AI-adjusted employment changes")
+```
+
+## Top 10 increases
+
+```{r chart84-largest, fig.cap="Occupations with the largest increases in adjusted AI employment."}
+top84 <- occ84 |> arrange(desc(net_change)) |> slice_head(n=10)
+top84$label <- shortname(top84$occupation)
+ggplot(top84, aes(x=reorder(label,net_change),y=net_change))+
+  geom_col(fill="#267B88")+coord_flip()+
+  labs(title="Largest increases in AI-involved employment",
+       x="Occupation",y="Increase (thousands)")+report_theme
+```
+
+```{r table84-largest}
+kable(top84 |> select(Occupation=occupation, Increase_thousands=net_change),
+      caption="Top 10 increases in Table 8.4",digits=1)
+```
+
+## Ten smallest increases
+
+```{r chart84-smallest, fig.cap="The smallest reported increases, not job losses."}
+small84 <- occ84 |> arrange(net_change) |> slice_head(n=10)
+small84$label <- shortname(small84$occupation)
+ggplot(small84, aes(x=reorder(label,net_change),y=net_change))+
+  geom_col(fill="#C08342")+coord_flip()+
+  labs(title="Smallest projected increases in AI-involved employment",
+       x="Occupation",y="Increase (thousands)")+report_theme
+```
+
+**Conclusion:** The size of the projected increase varies considerably across occupations. A small increase in *AI-involved* employment does not by itself indicate a decline in total employment.
+
+# Table 8.5 — Industrial Classifications
+
+## What this table means
+
+An **occupation** describes what a person does at work; an **industry** describes what an organisation produces or provides. This table groups two-digit industry codes under sections such as agriculture, manufacturing and information services. It is a **classification table**, not an employment forecast.
+
+```{r table85-examples}
+industry85 <- t85 |>
+  filter(!is.na(industry_code),nzchar(trimws(industry_code)),
+         !is.na(section_group)) |>
+  distinct(section_group,industry_code,.keep_all=TRUE)
+kable(head(industry85 |>
+  select(Section=section_group,Industry_code=industry_code,Industry=industry),12),
+  caption="Sample industrial classification entries")
+```
+
+## Number of industry codes by section
+
+```{r table85-summary}
+summary85 <- industry85 |>
+  count(section_group, name="Industry_codes") |>
+  arrange(desc(Industry_codes))
+kable(summary85,caption="Number of two-digit industries in each section")
+```
+
+```{r chart85, fig.cap="Count of industry codes per section; these bars are not numbers of workers."}
+ggplot(summary85,aes(x=reorder(section_group,Industry_codes),y=Industry_codes))+
+  geom_col(fill="#3F7BB2")+coord_flip()+
+  labs(title="Industry codes across classification sections",
+       x="Industrial section",y="Count of industry codes")+report_theme
+```
+
+**Conclusion:** Industry classifications organise economic activities consistently. This allows patent statistics and other indicators to be compared across sectors, but the number of industry codes is not a measure of employment or economic importance.
+
+# Table 8.6 — AI Patent Penetration (2013–2023)
+
+## Meaning of patent penetration
+
+AI patent penetration describes the **percentage of patent activity classified as AI-related** within an industrial sector. For illustration, 25 AI-related patents out of 100 total patents corresponds to 25% penetration. It is *not* the proportion of employees or companies using AI.
+
+The data has annual columns for 2013–2023. We converted these from wide format into long format, with a row for each sector and year. Missing values remain missing; they are not treated as zero.
+
+## Sector-level patent penetration over time
+
+The following figures use only the rows representing full industrial **Sections**. This avoids counting the section aggregate and the industry subcategories together. We display the five sections with the largest reported 2023 penetration rates, among sections with available observations in both 2013 and 2023.
+
+```{r data86-overview}
+sector86 <- t86 |>
+  filter(grepl("^Section\\s+[A-U]$",sector_code),
+         !is.na(Year),is.finite(Penetration)) |>
+  mutate(Section=paste0(sector_code," — ",section_name))
+sector_2013 <- sector86 |> filter(Year==2013) |>
+  select(sector_code,Beginning=Penetration)
+sector_2023 <- sector86 |> filter(Year==2023) |>
+  select(sector_code,Ending=Penetration)
+sector_rank <- inner_join(sector_2013,sector_2023,by="sector_code") |>
+  arrange(desc(Ending))
+selected_codes <- head(sector_rank$sector_code,5)
+sector5 <- sector86 |> filter(sector_code %in% selected_codes)
+kable(sector_rank |> mutate(Change_pp=round(Ending-Beginning,2)),
+      caption="Sector-level patent penetration: 2013 and 2023 (%)",digits=2)
+```
+
+```{r chart86-trend, fig.cap="AI patent penetration trends for five selected industrial sections."}
+ggplot(sector5,aes(x=Year,y=Penetration,colour=Section,group=Section))+
+  geom_line(linewidth=0.95)+geom_point(size=1.5)+
+  scale_x_continuous(breaks=seq(2013,2023,2))+
+  labs(title="AI patent penetration by sector",x="Year",
+       y="Penetration (%)",colour="Industrial section")+
+  report_theme
+```
+
+## Year-on-year change in patent penetration
+
+We calculate the annual difference in **percentage points**, not percent growth. For example, a penetration rate rising from 3% to 5% has increased by **2 percentage points**.
+
+```{r chart86-annual, fig.cap="Yearly change in penetration, in percentage points."}
+change86 <- sector5 |> group_by(Section) |>
+  arrange(Year,.by_group=TRUE) |>
+  mutate(Change_pp=Penetration-lag(Penetration),
+         Prior_year=lag(Year)) |>
+  filter(Year-Prior_year==1) |> ungroup()
+ggplot(change86,aes(x=Year,y=Change_pp,colour=Section,group=Section))+
+  geom_hline(yintercept=0,linetype="dashed")+
+  geom_line(linewidth=0.9)+geom_point(size=1.5)+
+  scale_x_continuous(breaks=seq(2014,2023,2))+
+  labs(title="Year-on-year change in AI patent penetration",
+       x="Year",y="Change (percentage points)",colour="Industrial section")+
+  report_theme
+```
+
+## Sector comparison in 2023
+
+```{r chart86-latest, fig.cap="Patent penetration in 2023 for sectors with reported values."}
+latest86 <- sector86 |> filter(Year==2023) |> arrange(desc(Penetration))
+latest86$label <- shortname(latest86$Section,50)
+ggplot(latest86,aes(x=reorder(label,Penetration),y=Penetration))+
+  geom_col(fill="#3E829D")+coord_flip()+
+  labs(title="AI patent penetration by industrial section, 2023",
+       x="Industrial section",y="Penetration (%)")+report_theme
+```
+
+## Summary measures for selected sections
+
+The **mean** describes average penetration during the available years. The **standard deviation (SD)** shows year-to-year variability around that mean. **CAGR** is the compound annual growth rate, calculated only when the first observed rate is positive and there is a positive time gap. These measures describe the *patent penetration series*, not growth in employment.
+
+```{r table86-stats}
+stat86 <- sector5 |> group_by(Section) |> arrange(Year,.by_group=TRUE) |>
+  summarise(First_year=first(Year),Last_year=last(Year),
+            Mean_penetration=mean(Penetration),
+            SD_penetration=sd(Penetration),
+            First_rate=first(Penetration),Last_rate=last(Penetration),
+            Change_pp=last(Penetration)-first(Penetration),
+            CAGR_percent=if (first(Penetration)>0 && last(Penetration)>=0 &&
+                               last(Year)>first(Year))
+             100*((last(Penetration)/first(Penetration))^
+                  (1/(last(Year)-first(Year)))-1) else NA_real_,
+            .groups="drop")
+kable(stat86,digits=2,caption="Descriptive measures of AI patent penetration")
+```
+
+**Conclusion:** Patent-related AI activity has different trajectories across sectors. The data helps discuss where AI invention is becoming more prominent, but it cannot measure the share of workers actually using AI.
+
+# How the Shiny App Works
+
+The companion Shiny application uses **user-interface controls** to make the analysis interactive. Users can select employment scenarios, years, occupation rankings and colours, then view corresponding plots and tables. In Table 8.3, a scatter plot also supports **brushing**: dragging a rectangle selects occupational points for inspection.
+
+The most important Shiny tools are `selectInput()`, `sliderInput()`, `reactive()`, `renderPlot()`, `renderTable()` and `brushedPoints()`.
+
+## Example: Reactive data selection and brushing
+
+This is a simplified illustration of the approach used in the full app (the full application is provided in `final_endsem_shiny.R`):
+
+```{r shiny-example, eval=FALSE}
+# Inside a Shiny server function:
+selected <- reactive({
+  head(occ83[order(-occ83$TS_adjusted_2035), ], input$n83)
+})
+
+output$brushed83 <- renderTable({
+  req(input$graph83 == "scatter", input$plot_brush83)
+  b <- brushedPoints(selected(), input$plot_brush83,
+                     xvar="TS_unadjusted_2035", yvar="TS_adjusted_2035")
+  req(nrow(b)>0)
+  b$share <- round(100*b$TS_adjusted_2035/b$TS_unadjusted_2035,1)
+  b
+})
+```
+
+# Main Findings and Practical Implications
+
+**Employment scenarios:** Different assumptions lead to different job projections, so scenario comparisons are useful for understanding uncertainty.
+
+**Workforce demand:** Net employment change does not tell the entire recruitment story; replacement demand may be substantial.
+
+**AI-related employment:** The adjusted estimates suggest AI-related activities could become much more common within existing occupations by 2035. This may increase the importance of AI literacy and occupation-specific training.
+
+**Innovation:** AI patent penetration adds context about where inventions are happening, but patent shares should not be confused with measured workplace AI adoption.
+
+# Limitations
+
+- The research concerns the **United Kingdom**; the conclusions should not be transferred directly to other countries.
+- The years **2030 and 2035 are projections** based on the model's assumptions.
+- AI-involved employment is not the same as new jobs created by AI.
+- Patent activity measures invention, not direct adoption by firms or workers.
+- Industry-code counts are classifications, not employment or economic output.
+- The Table 8.4 file contains only positive reported changes, so its smallest values should not be described as job losses.
+- The static R Markdown charts do not have Shiny's live filtering or brushing; use the supplied `.R` script for interactive exploration.
+
+# Overall Conclusion
+
+This project demonstrates how R can turn complex government employment data into an understandable report and an interactive dashboard. Tables 8.1 and 8.2 show how future employment and recruitment needs vary by scenario. Table 8.3 highlights the difference between the size of selected AI-related occupations and the estimated number of jobs involving AI activities. Tables 8.4–8.6 provide additional context on occupational change, industry classification and AI innovation.
+
+**The overall message is that the effects of AI on work are about both employment numbers and the changing activities and skills within existing occupations.** Employment projections should inform planning and training, but not be treated as certainties.
+
+# References
+
+UK Government. *AI Skills for Life and Work: Labour Market and Skills Projections.* [Official publication](https://www.gov.uk/government/publications/ai-skills-for-life-and-work-labour-market-and-skills-projections/ai-skills-for-life-and-work-labour-market-and-skills-projections).
+
+# Appendix — Reproducing the Report
+
+Keep the `.Rmd` file and all six data CSV files in the same folder. In RStudio, install the packages listed below if you do not already have them, open the `.Rmd` file, and click **Knit to HTML**.
+
+```{r install-help, eval=FALSE}
+install.packages(c("rmarkdown","knitr","ggplot2","dplyr","tidyr","stringr","scales"))
+rmarkdown::render("AI_Skills_Complete_Project_Report.Rmd")
+```
+
+For interactive graph selection and brushing, run `final_endsem_shiny.R` after loading the required project datasets in your R environment.
